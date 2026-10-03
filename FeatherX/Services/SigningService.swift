@@ -1,11 +1,16 @@
 import Foundation
-
-struct SigningResult {
-    let outputURL: URL
-}
+import RorkSign
 
 enum SigningService {
-    static func statusText() -> String {
-        "Signing engine interface prepared. Native on-device signing will use a bundled Swift signing implementation."
+    static func sign(ipaURL: URL, p12URL: URL, profileURL: URL, password: String, outputURL: URL) throws {
+        let credential = try SigningIdentity(pkcs12Data: Data(contentsOf: p12URL), password: password)
+        let profileData = try Data(contentsOf: profileURL)
+        try RorkSigner.signIPA(at: ipaURL, outputURL: outputURL, identity: credential, options: AppSigningOptions(rootProvisioningProfile: profileData))
+    }
+
+    static func validate(p12URL: URL, profileURL: URL, password: String) throws -> String {
+        let credentialData = try Data(contentsOf: p12URL)
+        let profileData = try Data(contentsOf: profileURL)
+        return try RorkSigner.validatedTeamIdentifier(provisioningProfileData: profileData, credentialData: credentialData, password: password)
     }
 }
