@@ -1,0 +1,36 @@
+name: Build FeatherX
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install XcodeGen
+        run: brew install xcodegen
+      - name: Generate Xcode project
+        run: xcodegen generate
+      - name: Build unsigned archive
+        run: |
+          xcodebuild archive \
+            -project FeatherX.xcodeproj \
+            -scheme FeatherX \
+            -configuration Release \
+            -sdk iphoneos \
+            -archivePath "$RUNNER_TEMP/FeatherX.xcarchive" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO
+      - name: Package unsigned IPA
+        run: |
+          mkdir -p "$RUNNER_TEMP/Payload"
+          cp -R "$RUNNER_TEMP/FeatherX.xcarchive/Products/Applications/FeatherX.app" "$RUNNER_TEMP/Payload/"
+          cd "$RUNNER_TEMP"
+          zip -qry FeatherX-unsigned.ipa Payload
+      - uses: actions/upload-artifact@v4
+        with:
+          name: FeatherX-unsigned-ipa
+          path: ${{ runner.temp }}/FeatherX-unsigned.ipa
