@@ -65,6 +65,6 @@ struct AppsView: View {
             let dest = try FileImportService.copyIntoLibrary(url)
             let m = try IPAService.metadata(from: dest)
             state.addApp(ManagedApp(name: m.name, bundleIdentifier: m.bundleID, version: m.version, build: m.build, fileName: dest.lastPathComponent))
-        } catch { error = error.localizedDescription }
+        } catch let importError { error = importError.localizedDescription }
     }
 }
