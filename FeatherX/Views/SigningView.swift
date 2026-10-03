@@ -2,8 +2,9 @@ import SwiftUI
 
 struct SigningView: View {
     @EnvironmentObject private var state: AppState
-    @State private var importingCertificate = false
-    @State private var importingProfile = false
+    enum ImportKind { case certificate, profile }
+    @State private var importKind: ImportKind?
+    @State private var showingImporter = false
     @State private var selectedApp: ManagedApp?
     @State private var password = ""
     @State private var showingPassword = false
@@ -30,7 +31,8 @@ struct SigningView: View {
                     }
 
                     Button {
-                        importingCertificate = true
+                        importKind = .certificate
+                        showingImporter = true
                     } label: {
                         Label("Import P12 / PFX", systemImage: "key.fill")
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -56,7 +58,8 @@ struct SigningView: View {
                     }
 
                     Button {
-                        importingProfile = true
+                        importKind = .profile
+                        showingImporter = true
                     } label: {
                         Label("Import Mobileprovision", systemImage: "doc.badge.plus")
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -106,15 +109,16 @@ struct SigningView: View {
             .navigationTitle("Signing")
             .navigationBarTitleDisplayMode(.large)
             .fileImporter(
-                isPresented: $importingCertificate,
-                allowedContentTypes: [.p12, .pfx, .data],
+                isPresented: $showingImporter,
+                allowedContentTypes: [.data],
                 allowsMultipleSelection: false
-            ) { importCertificate($0) }
-            .fileImporter(
-                isPresented: $importingProfile,
-                allowedContentTypes: [.mobileprovision, .data],
-                allowsMultipleSelection: false
-            ) { importProfile($0) }
+            ) { result in
+                switch importKind {
+                case .certificate: importCertificate(result)
+                case .profile: importProfile(result)
+                case nil: break
+                }
+            }
             .sheet(isPresented: $showingPassword) {
                 NavigationStack {
                     Form {
@@ -165,13 +169,21 @@ struct SigningView: View {
             let p12 = try libraryURL(certificate.fileName)
             let prov = try libraryURL(profile.fileName)
             let output = try FileImportService.libraryFolder()
-                .appendingPathComponent("(app.name)-signed.ipa")
+                .appendingPathComponent("\(app.name)-signed.ipa")
+
+            let parsedProfile = ProvisioningProfileParser.parse(try Data(contentsOf: prov))
+            let profileBundleID = parsedProfile.appID
+                .split(separator: ".", maxSplits: 1)
+                .dropFirst().first.map(String.init) ?? ""
+            let bundleID = (profileBundleID.isEmpty || profileBundleID.contains("*"))
+                ? app.bundleIdentifier : profileBundleID
 
             try SigningService.sign(
                 ipaURL: input,
                 p12URL: p12,
                 profileURL: prov,
                 password: password,
+                bundleIdentifier: bundleID,
                 outputURL: output
             )
 
@@ -181,7 +193,7 @@ struct SigningView: View {
             showingPassword = false
             status = "Signed IPA created. Open Apps to share it with FlareStore or another app."
         } catch {
-            status = "Signing failed: (error.localizedDescription)"
+            status = "Signing failed: \(error.localizedDescription)"
         }
     }
 
@@ -218,11 +230,11 @@ struct SigningView: View {
 
                 status = "Certificate imported successfully."
             } catch {
-                status = "Certificate import failed: (error.localizedDescription)"
+                status = "Certificate import failed: \(error.localizedDescription)"
             }
 
         case .failure(let error):
-            status = "Certificate import failed: (error.localizedDescription)"
+            status = "Certificate import failed: \(error.localizedDescription)"
         }
     }
 
@@ -261,11 +273,11 @@ struct SigningView: View {
 
                 status = "Provisioning profile imported successfully."
             } catch {
-                status = "Provisioning profile import failed: (error.localizedDescription)"
+                status = "Provisioning profile import failed: \(error.localizedDescription)"
             }
 
         case .failure(let error):
-            status = "Provisioning profile import failed: (error.localizedDescription)"
+            status = "Provisioning profile import failed: \(error.localizedDescription)"
         }
     }
 }
