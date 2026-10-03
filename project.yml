@@ -1,0 +1,23 @@
+name: FeatherX
+options:
+  bundleIdPrefix: com.risinginvader
+  deploymentTarget:
+    iOS: "17.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+targets:
+  FeatherX:
+    type: application
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - FeatherX
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.risinginvader.featherx
+        PRODUCT_NAME: FeatherX
+        INFOPLIST_KEY_CFBundleDisplayName: FeatherX
+        TARGETED_DEVICE_FAMILY: "1,2"
+        SUPPORTS_MACCATALYST: NO
