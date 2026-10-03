@@ -21,6 +21,8 @@ targets:
     deploymentTarget: "17.0"
     sources:
       - FeatherX
+    info:
+      path: FeatherX/Info.plist
     dependencies:
       - package: RorkSign
         product: RorkSign
