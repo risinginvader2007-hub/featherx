@@ -73,9 +73,10 @@ struct SigningView: View {
             let output = try FileImportService.libraryFolder().appendingPathComponent("\(app.name)-signed.ipa")
             try SigningService.sign(ipaURL: input, p12URL: p12, profileURL: prov, password: password, outputURL: output)
             try KeychainService.savePassword(password, for: certificate.id.uuidString)
+            state.markSigned(app.id, fileName: output.lastPathComponent)
             password = ""
             showingPassword = false
-            status = "Signed IPA created: \(output.lastPathComponent)"
+            status = "Signed IPA created. Open Apps to share it with FlareStore or another app."
         } catch {
             status = "Signing failed: \(error.localizedDescription)"
         }
