@@ -10,7 +10,7 @@ packages:
     from: 0.6.5
   ZipArchive:
     url: https://github.com/rorkai/swift-zip-archive.git
-    from: 0.5.0
+    exact: 0.8.1-rork.4
 settings:
   base:
     SWIFT_VERSION: "6.0"
