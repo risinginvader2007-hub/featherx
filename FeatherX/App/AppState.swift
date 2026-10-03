@@ -16,6 +16,12 @@ final class AppState: ObservableObject {
         load()
     }
     func addApp(_ app: ManagedApp) { apps.insert(app, at: 0); save() }
+    func markSigned(_ appID: UUID, fileName: String) {
+        guard let index = apps.firstIndex(where: { $0.id == appID }) else { return }
+        apps[index].signedFileName = fileName
+        apps[index].signedAt = Date()
+        save()
+    }
     func addCertificate(_ asset: SigningAsset) { certificates.insert(asset, at: 0); save() }
     func addProfile(_ asset: SigningAsset) { profiles.insert(asset, at: 0); save() }
     private func save() {
